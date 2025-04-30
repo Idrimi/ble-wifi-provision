@@ -1,11 +1,11 @@
 [Unit]
-Description=BLE Wi-Fi Provisioning via Bluezero
+Description=BLE Wi-Fi Provisioning (Go)
 After=bluetooth.service
 Wants=bluetooth.service
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/ble-wifi-provision.sh
+ExecStart=/usr/local/bin/ble-golang-provision.sh
 Restart=no
 
 [Install]

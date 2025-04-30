@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "🟢 Unblocking Bluetooth..."
+# Ensure Bluetooth is enabled
 rfkill unblock bluetooth
 systemctl enable --now bluetooth
 
-echo "🔷 Starte BL EProvisioning via Bluezero..."
-exec /usr/local/bin/ble-provision.py
+# Run BLE provisioning binary
+exec /usr/local/bin/ble-golang-provision

@@ -1,48 +1,30 @@
-# BLE Wi-Fi Provisioning via Bluezero für Raspberry Pi Zero 2 W
+# BLE Wi-Fi Provisioning via Go for Raspberry Pi Zero 2 W
 
-Dieses Repository enthält ein komplettes Setup für eine BLE-basierte Wi-Fi-Provisionierung auf dem Raspberry Pi Zero 2 W mit dem **Bluezero**-Framework.
+This repository provides a Go-based BLE peripheral to provision Wi-Fi on Raspberry Pi Zero 2 W.
 
-## Inhalt
+## Components
 
-- **ble-provision.py**  
-  Python-Skript (Bluezero) für GATT-Server und Advertisement.
+- **main.go**: Go program using [go-ble/ble](https://github.com/go-ble/ble) to advertise and handle GATT writes for SSID & password.
+- **go.mod**: Go module file.
+- **ble-wifi-provision.sh**: Wrapper script to run the binary.
+- **ble-wifi-provision.service**: systemd unit to start provisioning on boot.
+- **setup-go.sh**: Installer script to install Go, build the binary, and deploy files.
 
-- **ble-wifi-provision.sh**  
-  Shell-Wrapper, der den GATT-Server startet.
+## Quickstart
 
-- **ble-wifi-provision.service**  
-  systemd-Unit für automatischen Start.
-
-- **setup-blezero.sh**  
-  Installationsskript zum Einrichten der Umgebung und Aktivieren des Dienstes.
-
-## Schnellstart
-
-1. ZIP entpacken und in das Verzeichnis wechseln:  
+1. Unzip and enter directory:
    ```bash
-   unzip blezero-provision.zip
-   cd blezero-provision
+   unzip ble-golang-provision.zip
+   cd ble-golang-provision
    ```
-
-2. Installationsskript ausführen:
+2. Run installer:
    ```bash
-   sudo chmod +x setup-blezero.sh
-   sudo ./setup-blezero.sh
+   sudo chmod +x setup-go.sh
+   sudo ./setup-go.sh
    ```
-
-3. Provisioning starten:
+3. Start provisioning:
    ```bash
    sudo systemctl start ble-wifi-provision.service
-   # oder manuell:
-   sudo ./ble-wifi-provision.sh
    ```
-
-4. Mit einer BLE-App (z.B. nRF Connect) **Pi-Setup** scannen, SSID auf Charakteristik `...ef1` schreiben und Passwort auf `...ef2`.
-
-5. Auf der Konsole erscheint:
-   ```
-   [GATT] SSID gesetzt: MeinNetz
-   [GATT] PSK gesetzt: supergeheim
-   [GATT] Verbinde zu Wi-Fi: MeinNetz
-   [END] Provisioning abgeschlossen.
-   ```
+4. In your BLE app, scan for **Pi-Setup**, write SSID to characteristic `12345678-1234-5678-1234-56789abcdef1`, password to `...ef2`.
+5. On success, the Pi connects and stops advertising.
