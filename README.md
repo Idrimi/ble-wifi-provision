@@ -1,29 +1,48 @@
-# BLE → Wi-Fi Provisioning for Raspberry Pi Zero 2 W
+# BLE Wi-Fi Provisioning via Bluezero für Raspberry Pi Zero 2 W
 
-This repository provides a headless BLE Wi-Fi provisioning flow for the Raspberry Pi Zero 2 W.
+Dieses Repository enthält ein komplettes Setup für eine BLE-basierte Wi-Fi-Provisionierung auf dem Raspberry Pi Zero 2 W mit dem **Bluezero**-Framework.
 
-## Contents
+## Inhalt
 
-- **ble-creds-server.py**  
-  Python GATT server (dbus-next + asyncio) advertising over BLE with fixed method calls.
+- **ble-provision.py**  
+  Python-Skript (Bluezero) für GATT-Server und Advertisement.
 
 - **ble-wifi-provision.sh**  
-  Shell wrapper to run the GATT server and connect Wi-Fi via nmcli.
-
-- **setup-ble-wifi-bookworm.sh**  
-  Installer script for Debian Bookworm Lite.
+  Shell-Wrapper, der den GATT-Server startet.
 
 - **ble-wifi-provision.service**  
-  Optional systemd unit.
+  systemd-Unit für automatischen Start.
 
-- **Dockerfile**  
-  Containerized version.
+- **setup-blezero.sh**  
+  Installationsskript zum Einrichten der Umgebung und Aktivieren des Dienstes.
 
-## Quickstart
+## Schnellstart
 
-1. Run the installer:
+1. ZIP entpacken und in das Verzeichnis wechseln:  
    ```bash
-   sudo ./setup-ble-wifi-bookworm.sh
+   unzip blezero-provision.zip
+   cd blezero-provision
    ```
-2. In your BLE app, connect to **Pi-Setup**, write SSID to `CHAR1_UUID`, and password to `CHAR2_UUID`.
-3. Pi joins network automatically.
+
+2. Installationsskript ausführen:
+   ```bash
+   sudo chmod +x setup-blezero.sh
+   sudo ./setup-blezero.sh
+   ```
+
+3. Provisioning starten:
+   ```bash
+   sudo systemctl start ble-wifi-provision.service
+   # oder manuell:
+   sudo ./ble-wifi-provision.sh
+   ```
+
+4. Mit einer BLE-App (z.B. nRF Connect) **Pi-Setup** scannen, SSID auf Charakteristik `...ef1` schreiben und Passwort auf `...ef2`.
+
+5. Auf der Konsole erscheint:
+   ```
+   [GATT] SSID gesetzt: MeinNetz
+   [GATT] PSK gesetzt: supergeheim
+   [GATT] Verbinde zu Wi-Fi: MeinNetz
+   [END] Provisioning abgeschlossen.
+   ```

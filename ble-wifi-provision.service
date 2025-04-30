@@ -1,11 +1,12 @@
 [Unit]
-Description=BLE Wi-Fi Provisioning
+Description=BLE Wi-Fi Provisioning via Bluezero
 After=bluetooth.service
 Wants=bluetooth.service
 
 [Service]
-Type=oneshot
+Type=simple
 ExecStart=/usr/local/bin/ble-wifi-provision.sh
+Restart=no
 
 [Install]
 WantedBy=multi-user.target
