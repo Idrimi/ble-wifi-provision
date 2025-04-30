@@ -7,28 +7,33 @@ from dbus_next.service import ServiceInterface, method, dbus_property, PropertyA
 
 BLUEZ = 'org.bluez'
 ADAPTER_PATH = '/org/bluez/hci0'
+SERVICE_UUID = '12345678-1234-5678-1234-56789abcdef0'
+CHAR1_UUID = SERVICE_UUID[:-1] + '1'
+CHAR2_UUID = SERVICE_UUID[:-1] + '2'
+
 GATT_MGR_IFACE = 'org.bluez.GattManager1'
 LE_ADV_MGR_IFACE = 'org.bluez.LEAdvertisingManager1'
 GATT_SVC_IFACE = 'org.bluez.GattService1'
 GATT_CHR_IFACE = 'org.bluez.GattCharacteristic1'
-LE_ADV_IFACE = 'org.bluez.LEAdvertisement1'
+LE_ADV_IFACE    = 'org.bluez.LEAdvertisement1'
 
 class CredsService(ServiceInterface):
     PATH = '/org/bluez/example/service0'
-    UUID = '12345678-1234-5678-1234-56789abcdef0'
     def __init__(self, bus):
         super().__init__(GATT_SVC_IFACE)
-        self.bus = bus
         self.path = CredsService.PATH
+        self.bus = bus
         self.characteristics = []
 
     @dbus_property(access=PropertyAccess.READ)
-    def UUID(self) -> 's': return CredsService.UUID
+    def UUID(self) -> 's': return SERVICE_UUID
     @dbus_property(access=PropertyAccess.READ)
     def Primary(self) -> 'b': return True
     @dbus_property(access=PropertyAccess.READ)
     def Characteristics(self) -> 'ao':
         return [ch.path for ch in self.characteristics]
+
+CredsService.PATH = '/org/bluez/example/service0'
 
 class WriteOnlyChr(ServiceInterface):
     def __init__(self, bus, idx, uuid):
@@ -56,7 +61,7 @@ class CredsAdvertisement(ServiceInterface):
         self.bus = bus
         self.path = CredsAdvertisement.PATH
         self.type = 'peripheral'
-        self.service_uuids = [CredsService.UUID]
+        self.service_uuids = [SERVICE_UUID]
         self.local_name = 'Pi-Setup'
 
     @dbus_property(access=PropertyAccess.READ)
@@ -75,25 +80,27 @@ class CredsAdvertisement(ServiceInterface):
 async def main():
     bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
 
-    # Introspect adapter for GATT and LE adv managers
+    # Introspect adapter for proxy
     introspection = await bus.introspect(BLUEZ, ADAPTER_PATH)
-    gatt_obj = bus.get_proxy_object(BLUEZ, ADAPTER_PATH, introspection)
+    proxy = bus.get_proxy_object(BLUEZ, ADAPTER_PATH, introspection)
 
+    # Register GATT service
     svc = CredsService(bus)
-    ch1 = WriteOnlyChr(bus, 1, CredsService.UUID[:-1] + '1')
-    ch2 = WriteOnlyChr(bus, 2, CredsService.UUID[:-1] + '2')
+    ch1 = WriteOnlyChr(bus, 1, CHAR1_UUID)
+    ch2 = WriteOnlyChr(bus, 2, CHAR2_UUID)
     svc.characteristics = [ch1, ch2]
     bus.export(svc.path, svc)
     bus.export(ch1.path, ch1)
     bus.export(ch2.path, ch2)
-    await gatt_obj.get_interface(GATT_MGR_IFACE).RegisterApplication('/', {})
+
+    gatt = proxy.get_interface(GATT_MGR_IFACE)
+    await gatt.RegisterApplication(svc.PATH, {})
 
     # Register LE advertisement
-    adv_obj = bus.get_proxy_object(BLUEZ, ADAPTER_PATH, introspection)
-    adv_mgr = adv_obj.get_interface(LE_ADV_MGR_IFACE)
     adv = CredsAdvertisement(bus)
-    bus.export(adv.path, adv)
-    await adv_mgr.RegisterAdvertisement(adv.path, {})
+    bus.export(adv.PATH, adv)
+    adv_mgr = proxy.get_interface(LE_ADV_MGR_IFACE)
+    await adv_mgr.RegisterAdvertisement(adv.PATH, {})
 
     print("🟢 Advertising as 'Pi-Setup', waiting for SSID & PSK…")
     while not (ch1.value and ch2.value):
@@ -103,7 +110,7 @@ async def main():
     psk  = ch2.value.decode()
     print(f"--> Got SSID: {ssid!r}, PSK: {psk!r}")
 
-    await adv_mgr.UnregisterAdvertisement(adv.path)
+    await adv_mgr.UnregisterAdvertisement(adv.PATH)
     sys.exit(0)
 
 if __name__ == '__main__':
