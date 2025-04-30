@@ -5,7 +5,7 @@ This repository provides a headless BLE-based Wi-Fi provisioning flow for the Ra
 ## Contents
 
 - **ble-creds-server.py**  
-  A Python GATT server (dbus-next + trio) that advertises over BLE and exposes two write-only characteristics for SSID & password.
+  A Python GATT server (dbus-next + asyncio) that advertises over BLE and exposes two write-only characteristics for SSID & password.
 
 - **ble-wifi-provision.sh**  
   A shell wrapper that runs the GATT server, captures credentials, and uses `nmcli` to connect to Wi-Fi.

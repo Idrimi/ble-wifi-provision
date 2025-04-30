@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import sys, trio
+import sys
+import asyncio
 from dbus_next.aio import MessageBus
 from dbus_next.constants import BusType
 from dbus_next.service import ServiceInterface, method, dbus_property, PropertyAccess
@@ -22,9 +23,9 @@ class CredsService(ServiceInterface):
         self.characteristics = []
 
     @dbus_property(access=PropertyAccess.READ)
-    def UUID(self) -> 's':        return CredsService.UUID
+    def UUID(self) -> 's': return CredsService.UUID
     @dbus_property(access=PropertyAccess.READ)
-    def Primary(self) -> 'b':     return True
+    def Primary(self) -> 'b': return True
     @dbus_property(access=PropertyAccess.READ)
     def Characteristics(self) -> 'ao':
         return [ch.path for ch in self.characteristics]
@@ -38,11 +39,11 @@ class WriteOnlyChr(ServiceInterface):
         self.value = b''
 
     @dbus_property(access=PropertyAccess.READ)
-    def UUID(self) -> 's':        return self.uuid
+    def UUID(self) -> 's': return self.uuid
     @dbus_property(access=PropertyAccess.READ)
-    def Service(self) -> 'o':     return CredsService.PATH
+    def Service(self) -> 'o': return CredsService.PATH
     @dbus_property(access=PropertyAccess.READ)
-    def Flags(self) -> 'as':      return ['write']
+    def Flags(self) -> 'as': return ['write']
 
     @method()
     def WriteValue(self, val: 'ay', options: 'a{sv}'):
@@ -59,13 +60,13 @@ class CredsAdvertisement(ServiceInterface):
         self.local_name = 'Pi-Setup'
 
     @dbus_property(access=PropertyAccess.READ)
-    def Type(self) -> 's':        return self.type
+    def Type(self) -> 's': return self.type
     @dbus_property(access=PropertyAccess.READ)
     def ServiceUUIDs(self) -> 'as': return self.service_uuids
     @dbus_property(access=PropertyAccess.READ)
-    def LocalName(self) -> 's':   return self.local_name
+    def LocalName(self) -> 's': return self.local_name
     @dbus_property(access=PropertyAccess.READ)
-    def Includes(self) -> 'as':   return ['tx-power']
+    def Includes(self) -> 'as': return ['tx-power']
 
     @method()
     def Release(self):
@@ -93,15 +94,14 @@ async def main():
 
     print("🟢 Advertising as 'Pi-Setup', waiting for SSID & PSK…")
     while not (ch1.value and ch2.value):
-        await trio.sleep(1)
+        await asyncio.sleep(1)
 
     ssid = ch1.value.decode()
     psk  = ch2.value.decode()
     print(f"--> Got SSID: {ssid!r}, PSK: {psk!r}")
 
-    # Unregister advertisement and exit
     await adv_mgr.get_interface(LE_ADV_MGR_IFACE).UnregisterAdvertisement(adv.path)
     sys.exit(0)
 
 if __name__ == '__main__':
-    trio.run(main)
+    asyncio.run(main())
