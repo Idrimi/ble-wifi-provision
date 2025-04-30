@@ -1,4 +1,5 @@
-use bluer::{adapter::AdapterEvent, gatt::local::{Application, Service, Characteristic}, Address, Session};
+use bluer::{adapter::Adapter, gatt::local::{Application, Service, Characteristic}, Session};
+use bluer::Address;
 use futures::stream::StreamExt;
 use std::process::Command;
 use std::error::Error;
@@ -16,15 +17,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // Create GATT application
     let mut app = Application::new(&session).await?;
     let svc = app.service(SERVICE_UUID.parse()?, true).await?;
-    let ssid_ch = svc.characteristic(CHAR1_UUID.parse()?).await?.with_write(true).build().await?;
-    let psk_ch = svc.characteristic(CHAR2_UUID.parse()?).await?.with_write(true).build().await?;
-    app.register().await?;
+    let ssid_ch = svc.characteristic(CHAR1_UUID.parse()?).await?
+        .with_write(true).build().await?;
+    let psk_ch = svc.characteristic(CHAR2_UUID.parse()?).await?
+        .with_write(true).build().await?;
+    app.serve().await?;
 
     // Start advertising
-    let adv = adapter.advertisement().await?;
-    adv.set_local_name(Some("Pi-Setup".into())).await?;
-    adv.set_service_uuids(vec![SERVICE_UUID.parse()?]).await?;
-    adv.register().await?;
+    adapter.advertisement().await?
+        .name("Pi-Setup")
+        .service_uuids(vec![SERVICE_UUID.parse()?])
+        .register().await?;
     println!("Advertising as Pi-Setup...");
 
     // Wait for SSID
@@ -54,6 +57,5 @@ async fn main() -> Result<(), Box<dyn Error>> {
         eprintln!("Failed to connect");
     }
 
-    adv.unregister().await?;
     Ok(())
 }
