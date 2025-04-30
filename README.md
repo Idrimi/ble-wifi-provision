@@ -1,30 +1,40 @@
-# BLE Wi-Fi Provisioning via Rust for Raspberry Pi Zero 2 W
+# BLE Wi-Fi Provisioning via C++ for Raspberry Pi Zero 2 W
 
-This repository provides a Rust-based BLE peripheral to provision Wi-Fi on Raspberry Pi Zero 2 W using the `bluer` crate.
+This repository provides a C++-based BLE peripheral to provision Wi-Fi on Raspberry Pi Zero 2 W using sdbus-c++.
 
-## Components
+## Files
 
-- **Cargo.toml**: Rust project configuration.
-- **src/main.rs**: BLE GATT server with advertisement.
-- **setup-rust.sh**: Installer script to set up Rust toolchain and build the binary.
-- **ble-wifi-provision.sh**: Wrapper script to run the binary.
-- **ble-wifi-provision.service**: systemd unit to start provisioning.
+- **ble_provision.cpp**  
+  Main C++ source with GATT server and LE advertisement via D-Bus.
+
+- **compile.sh**  
+  Script to compile, install binary and systemd service.
+
+- **ble-wifi-provision.service**  
+  systemd unit to run the provisioning binary at boot or on demand.
 
 ## Quickstart
 
-1. Unzip and enter directory:
+1. **Install dependencies**:
    ```bash
-   unzip ble-rust-provision.zip
-   cd ble-rust-provision
+   sudo apt update
+   sudo apt install -y g++ pkg-config libdbus-1-dev libsystemd-dev libglib2.0-dev libsdbus-c++-dev
    ```
-2. Run installer:
+
+2. **Compile & install**:
    ```bash
-   sudo chmod +x setup-rust.sh
-   sudo ./setup-rust.sh
+   chmod +x compile.sh
+   ./compile.sh
    ```
-3. Start provisioning:
+
+3. **Enable and start service**:
    ```bash
-   sudo systemctl start ble-wifi-provision.service
+   sudo systemctl enable ble-wifi-provision
+   sudo systemctl start ble-wifi-provision
    ```
-4. In your BLE app, scan for **Pi-Setup**, write SSID to characteristic `12345678-1234-5678-1234-56789abcdef1`, and password to `...ef2`.
-5. On success, the Pi connects and stops advertising.
+
+4. **Provision Wi-Fi**:
+   - On boot (or service start), the Pi advertises **Pi-Setup**.
+   - Connect with a BLE app (e.g. nRF Connect).
+   - Write your SSID to characteristic `...ef1`, password to `...ef2`.
+   - The Pi runs `nmcli` to connect and stops advertising.

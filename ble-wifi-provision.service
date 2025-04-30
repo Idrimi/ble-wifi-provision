@@ -1,11 +1,11 @@
 [Unit]
-Description=BLE Wi-Fi Provisioning (Rust)
+Description=BLE Wi-Fi Provisioning via C++
 After=bluetooth.service
 Wants=bluetooth.service
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/ble-wifi-provision.sh
+ExecStart=/usr/local/bin/ble_provision
 StandardOutput=journal
 StandardError=journal
 Restart=no
