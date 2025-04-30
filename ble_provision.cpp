@@ -18,10 +18,10 @@ static constexpr auto GATT_SERVICE_IFACE   = "org.bluez.GattService1";
 static constexpr auto GATT_CHAR_IFACE      = "org.bluez.GattCharacteristic1";
 static constexpr auto ADVERT_IFACE         = "org.bluez.LEAdvertisement1";
 
-static constexpr auto SERVICE_PATH         = "/org/bluez/example/service0";
-static constexpr auto CHAR1_PATH           = "/org/bluez/example/service0/char1";
-static constexpr auto CHAR2_PATH           = "/org/bluez/example/service0/char2";
-static constexpr auto ADV_PATH             = "/org/bluez/example/advertisement0";
+static constexpr auto SERVICE_PATH         = "/example/service0";
+static constexpr auto CHAR1_PATH           = "/example/service0/char1";
+static constexpr auto CHAR2_PATH           = "/example/service0/char2";
+static constexpr auto ADV_PATH             = "/example/advertisement0";
 
 static const std::string SERVICE_UUID      = "12345678-1234-5678-1234-56789abcdef0";
 static const std::string CHAR1_UUID        = SERVICE_UUID.substr(0, SERVICE_UUID.size()-1) + "1";
@@ -31,118 +31,97 @@ int main()
 {
     std::string ssid, psk;
 
-    // Verbindung zum System-Bus und Event-Loop starten
+    // Systembus + EventLoop
     auto connection = sdbus::createSystemBusConnection();
     connection->enterEventLoopAsync();
 
-    // 1) BLE-Agent registrieren
+    // 1) Agent1 registrieren
     auto agentMgr = sdbus::createProxy(*connection, BLUEZ_SERVICE, "/");
-    // Agent-Objekt implementieren
     auto agentObj = sdbus::createObject(*connection, "/example/agent");
-    agentObj->registerMethod("RequestPinCode")
-        .onInterface(AGENT_IFACE)
-        .implementedAs([](sdbus::ObjectPath) -> std::string { return ""; });
-    agentObj->registerMethod("RequestPasskey")
-        .onInterface(AGENT_IFACE)
-        .implementedAs([](sdbus::ObjectPath) -> uint32_t { return 0; });
-    agentObj->registerMethod("AuthorizeService")
-        .onInterface(AGENT_IFACE)
+    agentObj->registerMethod("RequestPinCode").onInterface(AGENT_IFACE)
+        .implementedAs([](sdbus::ObjectPath){ return std::string(); });
+    agentObj->registerMethod("RequestPasskey").onInterface(AGENT_IFACE)
+        .implementedAs([](sdbus::ObjectPath){ return uint32_t(0); });
+    agentObj->registerMethod("AuthorizeService").onInterface(AGENT_IFACE)
         .implementedAs([](sdbus::ObjectPath, std::string){});
     agentObj->finishRegistration();
-    // AgentManager: registrieren & Default setzen
-    agentMgr->callMethod("RegisterAgent")
-        .onInterface(AGENT_MANAGER_IFACE)
+    agentMgr->callMethod("RegisterAgent").onInterface(AGENT_MANAGER_IFACE)
         .withArguments(sdbus::ObjectPath{"/example/agent"}, std::string("NoInputNoOutput"))
         .dontExpectReply();
-    agentMgr->callMethod("RequestDefaultAgent")
-        .onInterface(AGENT_MANAGER_IFACE)
+    agentMgr->callMethod("RequestDefaultAgent").onInterface(AGENT_MANAGER_IFACE)
         .withArguments(sdbus::ObjectPath{"/example/agent"})
         .dontExpectReply();
 
-    // 2) Adapter auf pairable & discoverable setzen
+    // 2) Adapter Pairable + Discoverable
     auto adapterProps = sdbus::createProxy(*connection, BLUEZ_SERVICE, ADAPTER_PATH);
-    adapterProps->callMethod("Set")
-        .onInterface(PROPERTIES_IFACE)
+    adapterProps->callMethod("Set").onInterface(PROPERTIES_IFACE)
         .withArguments(std::string("org.bluez.Adapter1"), std::string("Pairable"), sdbus::Variant(true))
         .dontExpectReply();
-    adapterProps->callMethod("Set")
-        .onInterface(PROPERTIES_IFACE)
+    adapterProps->callMethod("Set").onInterface(PROPERTIES_IFACE)
         .withArguments(std::string("org.bluez.Adapter1"), std::string("Discoverable"), sdbus::Variant(true))
         .dontExpectReply();
-
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-    // 3) GATT-Service erstellen
-    auto service = sdbus::createObject(*connection, SERVICE_PATH);
-    service->registerProperty("UUID").onInterface(GATT_SERVICE_IFACE).withGetter([] { return SERVICE_UUID; });
-    service->registerProperty("Primary").onInterface(GATT_SERVICE_IFACE).withGetter([] { return true; });
-    service->registerProperty("Characteristics")
-        .onInterface(GATT_SERVICE_IFACE)
-        .withGetter([] {
-            return std::vector<sdbus::ObjectPath>{{CHAR1_PATH}, {CHAR2_PATH}};
-        });
-    service->finishRegistration();
+    // 3) GATT Service & Characteristics
+    auto svc = sdbus::createObject(*connection, SERVICE_PATH);
+    svc->registerProperty("UUID").onInterface(GATT_SERVICE_IFACE).withGetter([]{ return SERVICE_UUID; });
+    svc->registerProperty("Primary").onInterface(GATT_SERVICE_IFACE).withGetter([]{ return true; });
+    svc->registerProperty("Characteristics").onInterface(GATT_SERVICE_IFACE)
+        .withGetter([]{ return std::vector<sdbus::ObjectPath>{{CHAR1_PATH},{CHAR2_PATH}}; });
+    svc->finishRegistration();
 
-    // SSID-Characteristic
-    auto char1 = sdbus::createObject(*connection, CHAR1_PATH);
-    char1->registerProperty("UUID").onInterface(GATT_CHAR_IFACE).withGetter([] { return CHAR1_UUID; });
-    char1->registerProperty("Service").onInterface(GATT_CHAR_IFACE).withGetter([] { return sdbus::ObjectPath{SERVICE_PATH}; });
-    char1->registerProperty("Flags").onInterface(GATT_CHAR_IFACE).withGetter([] { return std::vector<std::string>{"write","write-without-response"}; });
-    char1->registerMethod("WriteValue").onInterface(GATT_CHAR_IFACE)
-        .implementedAs([&](const std::vector<uint8_t>& value, const std::map<std::string,sdbus::Variant>&) {
-            ssid = std::string(value.begin(), value.end());
-            std::cout << "[GATT] SSID: " << ssid << "\n";
+    auto c1 = sdbus::createObject(*connection, CHAR1_PATH);
+    c1->registerProperty("UUID").onInterface(GATT_CHAR_IFACE).withGetter([]{ return CHAR1_UUID; });
+    c1->registerProperty("Service").onInterface(GATT_CHAR_IFACE).withGetter([]{ return sdbus::ObjectPath{SERVICE_PATH}; });
+    c1->registerProperty("Flags").onInterface(GATT_CHAR_IFACE)
+        .withGetter([]{ return std::vector<std::string>{"write","write-without-response"}; });
+    c1->registerMethod("WriteValue").onInterface(GATT_CHAR_IFACE)
+        .implementedAs([&](const std::vector<uint8_t>& v, const std::map<std::string,sdbus::Variant>&){
+            ssid = std::string(v.begin(), v.end());
+            std::cout<<"[GATT] SSID: "<<ssid<<std::endl;
         });
-    char1->finishRegistration();
+    c1->finishRegistration();
 
-    // PSK-Characteristic
-    auto char2 = sdbus::createObject(*connection, CHAR2_PATH);
-    char2->registerProperty("UUID").onInterface(GATT_CHAR_IFACE).withGetter([] { return CHAR2_UUID; });
-    char2->registerProperty("Service").onInterface(GATT_CHAR_IFACE).withGetter([] { return sdbus::ObjectPath{SERVICE_PATH}; });
-    char2->registerProperty("Flags").onInterface(GATT_CHAR_IFACE).withGetter([] { return std::vector<std::string>{"write","write-without-response"}; });
-    char2->registerMethod("WriteValue").onInterface(GATT_CHAR_IFACE)
-        .implementedAs([&](const std::vector<uint8_t>& value, const std::map<std::string,sdbus::Variant>&) {
-            psk = std::string(value.begin(), value.end());
-            std::cout << "[GATT] PSK: " << psk << "\n";
+    auto c2 = sdbus::createObject(*connection, CHAR2_PATH);
+    c2->registerProperty("UUID").onInterface(GATT_CHAR_IFACE).withGetter([]{ return CHAR2_UUID; });
+    c2->registerProperty("Service").onInterface(GATT_CHAR_IFACE).withGetter([]{ return sdbus::ObjectPath{SERVICE_PATH}; });
+    c2->registerProperty("Flags").onInterface(GATT_CHAR_IFACE)
+        .withGetter([]{ return std::vector<std::string>{"write","write-without-response"}; });
+    c2->registerMethod("WriteValue").onInterface(GATT_CHAR_IFACE)
+        .implementedAs([&](const std::vector<uint8_t>& v, const std::map<std::string,sdbus::Variant>&){
+            psk = std::string(v.begin(), v.end());
+            std::cout<<"[GATT] PSK: "<<psk<<std::endl;
         });
-    char2->finishRegistration();
+    c2->finishRegistration();
 
-    // 4) GATT-Application registrieren
+    // 4) Register Application
     auto gattMgr = sdbus::createProxy(*connection, BLUEZ_SERVICE, ADAPTER_PATH);
     gattMgr->callMethod("RegisterApplication").onInterface(GATT_MANAGER_IFACE)
-        .withArguments(sdbus::ObjectPath{"/"}, std::map<std::string,sdbus::Variant>{})
+        .withArguments(sdbus::ObjectPath{SERVICE_PATH}, std::map<std::string,sdbus::Variant>{})
         .dontExpectReply();
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-    // 5) Advertisement erstellen und registrieren
+    // 5) Advertisement
     auto advMgr = sdbus::createProxy(*connection, BLUEZ_SERVICE, ADAPTER_PATH);
     auto adv = sdbus::createObject(*connection, ADV_PATH);
-    adv->registerProperty("Type").onInterface(ADVERT_IFACE).withGetter([] { return std::string("peripheral"); });
-    adv->registerProperty("ServiceUUIDs").onInterface(ADVERT_IFACE).withGetter([] { return std::vector<std::string>{SERVICE_UUID}; });
-    adv->registerProperty("LocalName").onInterface(ADVERT_IFACE).withGetter([] { return std::string("Pi-Setup"); });
-    adv->registerProperty("Includes").onInterface(ADVERT_IFACE).withGetter([] { return std::vector<std::string>{"tx-power"}; });
-    adv->registerMethod("Release").onInterface(ADVERT_IFACE).implementedAs([] { std::cout << "Advertisement released\n"; });
+    adv->registerProperty("Type").onInterface(ADVERT_IFACE).withGetter([]{ return std::string("peripheral"); });
+    adv->registerProperty("ServiceUUIDs").onInterface(ADVERT_IFACE).withGetter([]{ return std::vector<std::string>{SERVICE_UUID}; });
+    adv->registerProperty("LocalName").onInterface(ADVERT_IFACE).withGetter([]{ return std::string("Pi-Setup"); });
+    adv->registerProperty("Includes").onInterface(ADVERT_IFACE).withGetter([]{ return std::vector<std::string>{"tx-power"}; });
+    adv->registerMethod("Release").onInterface(ADVERT_IFACE).implementedAs([]{ std::cout<<"Adv released"<<std::endl; });
     adv->finishRegistration();
     advMgr->callMethod("RegisterAdvertisement").onInterface(ADVERT_MGR_IFACE)
         .withArguments(sdbus::ObjectPath{ADV_PATH}, std::map<std::string,sdbus::Variant>{})
         .dontExpectReply();
 
-    std::cout << "🟢 Advertising as Pi-Setup (pairable), waiting for credentials…\n";
+    std::cout<<"🟢 Advertising as Pi-Setup (pairable)... waiting credentials"<<std::endl;
 
-    // 6) Auf SSID & PSK warten
-    while(ssid.empty() || psk.empty())
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-    // WLAN verbinden
-    std::string cmd = "nmcli device wifi connect \"" + ssid + "\" password \"" + psk + "\"";
-    std::cout << "🔌 " << cmd << "\n";
-    std::system(cmd.c_str());
-
-    // Advertisement abmelden
+    // 6) Wait & connect
+    while(ssid.empty()||psk.empty()) std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::string cmd="nmcli device wifi connect ""+ssid+"" password ""+psk+""";
+    std::cout<<"🔌 "<<cmd<<std::endl; std::system(cmd.c_str());
     advMgr->callMethod("UnregisterAdvertisement").onInterface(ADVERT_MGR_IFACE)
-        .withArguments(sdbus::ObjectPath{ADV_PATH})
-        .dontExpectReply();
-
-    std::cout << "✅ Provisioning complete, exiting.\n";
+        .withArguments(sdbus::ObjectPath{ADV_PATH}).dontExpectReply();
+    std::cout<<"✅ Done"<<std::endl;
     return 0;
 }

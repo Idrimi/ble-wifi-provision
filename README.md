@@ -1,40 +1,31 @@
-# BLE Wi-Fi Provisioning via C++ with Pairable BLE for iOS Visibility
+# BLE Wi-Fi Provisioning via C++ with iOS-Pairable BLE (Final)
 
-Dieses Repository erweitert die C++ BLE-Provisioning-Lösung um:
-1. Registrierung eines BLE-Pairing-Agenten (`Agent1`).
-2. Adapter auf `Pairable` und `Discoverable` setzen.
-
-Damit erscheint der Raspberry Pi Zero 2 W in iOS Einstellungen → Bluetooth.
+Diese Version behebt die Anzeige im iOS-Bluetooth-Settings durch:
+1. `RegisterApplication` mit Service-Pfad statt root `/`.
+2. Korrekte `createProxy`-Aufrufe (3 Argumente).
+3. Service-Pfad außerhalb von `/org/bluez`, z.B. `/example/service0`.
 
 ## Dateien
 
 - **ble_provision.cpp**  
-  Komplettes C++-Programm mit Agent1-Registrierung, Adapter-Properties, GATT-Service und Advertisement.
+  Finaler C++-Code mit Agent1, Adapter-Properties, korrektem RegisterApplication.
 
 - **compile.sh**  
-  Skript zum Kompilieren und Installieren des Binaries und des Systemd-Services.
+  Kompiliert und installiert Binary & Systemd-Service.
 
 - **ble-wifi-provision.service**  
-  Systemd-Unit zum Starten des Provisioning-Dienstes.
+  systemd-Unit.
 
 ## Schnellstart
 
-1. Abhängigkeiten installieren:  
-   ```bash
-   sudo apt update
-   sudo apt install -y g++ pkg-config libdbus-1-dev libsystemd-dev libglib2.0-dev libsdbus-c++-dev
-   ```
+Abhängigkeiten installieren, dann:
 
-2. Kompilieren & Installieren:  
-   ```bash
-   chmod +x compile.sh
-   ./compile.sh
-   ```
+```bash
+chmod +x compile.sh
+./compile.sh
+sudo systemctl enable ble-wifi-provision
+sudo systemctl start ble-wifi-provision
+sudo journalctl -u ble-wifi-provision -f
+```
 
-3. Service aktivieren & starten:  
-   ```bash
-   sudo systemctl enable ble-wifi-provision
-   sudo systemctl start ble-wifi-provision
-   ```
-
-4. In iOS unter **Einstellungen → Bluetooth** das Gerät **Pi-Setup** sehen, pairen und anschließend SSID/PSK schreiben.
+In iOS-Einstellungen unter Bluetooth sollte **Pi-Setup** nun sichtbar sein und nach Pairing Services & Characteristics anzeigen.

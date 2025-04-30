@@ -7,4 +7,4 @@ echo "Installing binary and service..."
 sudo cp ble_provision /usr/local/bin/ble_provision
 sudo cp ble-wifi-provision.service /etc/systemd/system/
 sudo systemctl daemon-reload
-echo "Done. Enable with: sudo systemctl enable ble-wifi-provision && sudo systemctl start ble-wifi-provision"
+echo "Done! Enable: sudo systemctl enable ble-wifi-provision && sudo systemctl start ble-wifi-provision"
