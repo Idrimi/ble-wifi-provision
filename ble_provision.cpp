@@ -88,8 +88,8 @@ int main()
            .onInterface("org.bluez.GattManager1")
            .withArguments(sdbus::ObjectPath("/"), std::map<std::string, sdbus::Variant>{});
 
-    // Alias advertisement manager to gattMgr
-    auto advMgr = gattMgr;
+    // Use pointer to proxy for advertisement manager
+    auto* advMgr = gattMgr.get();
 
     // Create LE Advertisement object
     auto advObj = sdbus::createObject(*connection, ADV_PATH);
@@ -125,7 +125,7 @@ int main()
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // Connect to Wi-Fi
-    std::string cmd = "nmcli device wifi connect \"" + ssid + "\" password \"" + psk + "\"";
+    std::string cmd = "nmcli device wifi connect "" + ssid + "" password "" + psk + """;
     std::cout << "🔌 Running: " << cmd << std::endl;
     std::system(cmd.c_str());
 
