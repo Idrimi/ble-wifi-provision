@@ -36,7 +36,7 @@ int main()
     connection->enterEventLoopAsync();
 
     // 1) BLE-Agent registrieren
-    auto agentMgr = sdbus::createProxy(*connection, BLUEZ_SERVICE, "/", AGENT_MANAGER_IFACE);
+    auto agentMgr = sdbus::createProxy(*connection, BLUEZ_SERVICE, "/");
     // Agent-Objekt implementieren
     auto agentObj = sdbus::createObject(*connection, "/example/agent");
     agentObj->registerMethod("RequestPinCode")
@@ -60,7 +60,7 @@ int main()
         .dontExpectReply();
 
     // 2) Adapter auf pairable & discoverable setzen
-    auto adapterProps = sdbus::createProxy(*connection, BLUEZ_SERVICE, ADAPTER_PATH, PROPERTIES_IFACE);
+    auto adapterProps = sdbus::createProxy(*connection, BLUEZ_SERVICE, ADAPTER_PATH);
     adapterProps->callMethod("Set")
         .onInterface(PROPERTIES_IFACE)
         .withArguments(std::string("org.bluez.Adapter1"), std::string("Pairable"), sdbus::Variant(true))
@@ -108,14 +108,14 @@ int main()
     char2->finishRegistration();
 
     // 4) GATT-Application registrieren
-    auto gattMgr = sdbus::createProxy(*connection, BLUEZ_SERVICE, ADAPTER_PATH, GATT_MANAGER_IFACE);
+    auto gattMgr = sdbus::createProxy(*connection, BLUEZ_SERVICE, ADAPTER_PATH);
     gattMgr->callMethod("RegisterApplication").onInterface(GATT_MANAGER_IFACE)
         .withArguments(sdbus::ObjectPath{"/"}, std::map<std::string,sdbus::Variant>{})
         .dontExpectReply();
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
     // 5) Advertisement erstellen und registrieren
-    auto advMgr = sdbus::createProxy(*connection, BLUEZ_SERVICE, ADAPTER_PATH, ADVERT_MGR_IFACE);
+    auto advMgr = sdbus::createProxy(*connection, BLUEZ_SERVICE, ADAPTER_PATH);
     auto adv = sdbus::createObject(*connection, ADV_PATH);
     adv->registerProperty("Type").onInterface(ADVERT_IFACE).withGetter([] { return std::string("peripheral"); });
     adv->registerProperty("ServiceUUIDs").onInterface(ADVERT_IFACE).withGetter([] { return std::vector<std::string>{SERVICE_UUID}; });
