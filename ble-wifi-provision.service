@@ -1,5 +1,5 @@
 [Unit]
-Description=BLE Wi-Fi Provisioning (Go)
+Description=BLE Wi-Fi Provisioning (Rust)
 After=bluetooth.service
 Wants=bluetooth.service
 

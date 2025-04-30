@@ -1,26 +1,26 @@
-# BLE Wi-Fi Provisioning via Go for Raspberry Pi Zero 2 W
+# BLE Wi-Fi Provisioning via Rust for Raspberry Pi Zero 2 W
 
-This repository provides a Go-based BLE peripheral to provision Wi-Fi on Raspberry Pi Zero 2 W.
+This repository provides a Rust-based BLE peripheral to provision Wi-Fi on Raspberry Pi Zero 2 W using the `bluer` crate.
 
 ## Components
 
-- **main.go**: Go program using [go-ble/ble](https://github.com/go-ble/ble) to advertise and handle GATT writes for SSID & password.
-- **go.mod**: Go module file.
+- **Cargo.toml**: Rust project configuration.
+- **src/main.rs**: BLE GATT server with advertisement.
+- **setup-rust.sh**: Installer script to set up Rust toolchain and build the binary.
 - **ble-wifi-provision.sh**: Wrapper script to run the binary.
-- **ble-wifi-provision.service**: systemd unit to start provisioning on boot.
-- **setup-go.sh**: Installer script to install Go via apt, build the binary, and deploy files.
+- **ble-wifi-provision.service**: systemd unit to start provisioning.
 
 ## Quickstart
 
 1. Unzip and enter directory:
    ```bash
-   unzip ble-golang-only.zip
-   cd ble-golang-only
+   unzip ble-rust-provision.zip
+   cd ble-rust-provision
    ```
 2. Run installer:
    ```bash
-   sudo chmod +x setup-go.sh
-   sudo ./setup-go.sh
+   sudo chmod +x setup-rust.sh
+   sudo ./setup-rust.sh
    ```
 3. Start provisioning:
    ```bash

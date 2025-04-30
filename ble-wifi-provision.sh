@@ -5,5 +5,5 @@ set -euo pipefail
 rfkill unblock bluetooth
 systemctl enable --now bluetooth
 
-# Run BLE provisioning binary
-exec /usr/local/bin/ble-golang-provision
+# Run Rust provisioning binary
+exec /usr/local/bin/ble-rust-provision
