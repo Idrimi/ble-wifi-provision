@@ -6,7 +6,7 @@ set -euo pipefail
 
 echo "==> Installing dependencies…"
 apt-get update
-apt-get install -y python3-asyncio python3-dbus-next bluez bluetooth rfkill network-manager python3-pip
+apt-get install -y python3-dbus-next python3-pip bluez bluetooth rfkill network-manager
 
 echo "==> Deploying scripts…"
 cp ble-creds-server.py ble-wifi-provision.sh /usr/local/bin/

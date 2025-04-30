@@ -1,6 +1,6 @@
 FROM debian:bookworm-slim
 RUN apt-get update && \
-    apt-get install -y python3-asyncio python3-dbus-next bluez bluetooth rfkill network-manager dbus-client python3-pip && \
+    apt-get install -y python3-dbus-next python3-pip bluez bluetooth rfkill network-manager dbus-client && \
     rm -rf /var/lib/apt/lists/*
 COPY ble-creds-server.py /usr/local/bin/
 COPY ble-wifi-provision.sh /usr/local/bin/
