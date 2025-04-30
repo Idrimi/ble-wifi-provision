@@ -89,6 +89,9 @@ int main()
            .onInterface("org.bluez.GattManager1")
            .withArguments(sdbus::ObjectPath("/"), std::map<std::string, sdbus::Variant>{});
 
+    // **Delay to allow BlueZ to process registration**
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
     // 6) Use proxy pointer for advertisement manager
     auto* advMgr = gattMgr.get();
 
@@ -108,7 +111,7 @@ int main()
           .withGetter([&] { return std::vector<std::string>{"tx-power"}; });
     advObj->registerMethod("Release")
           .onInterface("org.bluez.LEAdvertisement1")
-          .implementedAs([&]{ std::cout<<"Advertisement released\n"; });
+          .implementedAs([&]{ std::cout << "Advertisement released\n"; });
     advObj->finishRegistration();
 
     // 8) Register Advertisement
@@ -123,7 +126,7 @@ int main()
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // 10) Connect to Wi-Fi
-    std::string cmd = "nmcli device wifi connect "" + ssid + "" password "" + psk + """;
+    std::string cmd = "nmcli device wifi connect \"" + ssid + "\" password \"" + psk + "\"";
     std::cout << "🔌 Running: " << cmd << std::endl;
     std::system(cmd.c_str());
 
