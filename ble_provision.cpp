@@ -9,7 +9,7 @@
 
 static constexpr auto BLUEZ_SERVICE        = "org.bluez";
 static constexpr auto ADAPTER_PATH         = "/org/bluez/hci0";
-static constexpr auto ADAPTER_IFACE        = "org.bluez.Adapter1";
+static constexpr auto ADAPTER_IFACE        = "org.freedesktop.DBus.Properties";
 static constexpr auto GATT_MANAGER_IFACE   = "org.bluez.GattManager1";
 static constexpr auto ADVERT_MGR_IFACE     = "org.bluez.LEAdvertisingManager1";
 static constexpr auto GATT_SERVICE_IFACE   = "org.bluez.GattService1";
@@ -36,12 +36,11 @@ int main()
     // Ensure adapter is powered
     auto adapter = sdbus::createProxy(*connection, BLUEZ_SERVICE, ADAPTER_PATH);
     adapter->callMethod("Set")
-           .onInterface("org.freedesktop.DBus.Properties")
-           .withArguments(std::string(ADAPTER_IFACE),
+           .onInterface(ADAPTER_IFACE)
+           .withArguments(std::string("org.bluez.Adapter1"),
                           std::string("Powered"),
                           sdbus::Variant(true))
            .dontExpectReply();
-    // Allow time for adapter
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
     // Create GATT service
@@ -69,7 +68,7 @@ int main()
          .withGetter([] { return sdbus::ObjectPath{SERVICE_PATH}; });
     char1->registerProperty("Flags")
          .onInterface(GATT_CHAR_IFACE)
-         .withGetter([] { return std::vector<std::string>{"write"}; });
+         .withGetter([] { return std::vector<std::string>{"write", "write-without-response"}; });
     char1->registerMethod("WriteValue")
          .onInterface(GATT_CHAR_IFACE)
          .implementedAs([&](const std::vector<uint8_t>& value, const std::map<std::string,sdbus::Variant>&){
@@ -88,7 +87,7 @@ int main()
          .withGetter([] { return sdbus::ObjectPath{SERVICE_PATH}; });
     char2->registerProperty("Flags")
          .onInterface(GATT_CHAR_IFACE)
-         .withGetter([] { return std::vector<std::string>{"write"}; });
+         .withGetter([] { return std::vector<std::string>{"write", "write-without-response"}; });
     char2->registerMethod("WriteValue")
          .onInterface(GATT_CHAR_IFACE)
          .implementedAs([&](const std::vector<uint8_t>& value, const std::map<std::string,sdbus::Variant>&){
@@ -103,11 +102,9 @@ int main()
            .onInterface(GATT_MANAGER_IFACE)
            .withArguments(sdbus::ObjectPath{"/"}, std::map<std::string,sdbus::Variant>{})
            .dontExpectReply();
-
-    // Short delay
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-    // Advertising manager
+    // Advertisement manager proxy
     auto advMgr = sdbus::createProxy(*connection, BLUEZ_SERVICE, ADAPTER_PATH);
 
     // Create advertisement

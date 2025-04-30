@@ -1,15 +1,8 @@
-# BLE Wi-Fi Provisioning via C++ for Raspberry Pi Zero 2 W (Adapter Power Fix)
+# BLE Wi-Fi Provisioning via C++ for Raspberry Pi Zero 2 W (Write Flags Fixed)
 
-This repository provides a C++ implementation using sdbus-c++ v2 for BLE Wi-Fi provisioning.
+This version adds `write-without-response` flag to characteristics so iOS apps like LightBlue can write.
 
-This version ensures the Bluetooth adapter is powered on via D-Bus before registering advertisement.
+## Changes
+- Characteristic Flags now include both "write" and "write-without-response".
 
-## Files
-
-- **ble_provision.cpp**: Main C++ source with adapter power-on logic.
-- **compile.sh**: Script to compile, install binary, and register the systemd service.
-- **ble-wifi-provision.service**: systemd unit for provisioning.
-
-## Quickstart
-
-Install dependencies, compile, enable, and start as described below.
+Compile and deploy as before.
