@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys, trio
 from dbus_next.aio import MessageBus
+from dbus_next.constants import BusType
 from dbus_next.service import ServiceInterface, method, dbus_property, PropertyAccess
 
 BLUEZ = 'org.bluez'
@@ -9,7 +10,7 @@ GATT_MGR_IFACE = 'org.bluez.GattManager1'
 LE_ADV_MGR_IFACE = 'org.bluez.LEAdvertisingManager1'
 GATT_SVC_IFACE = 'org.bluez.GattService1'
 GATT_CHR_IFACE = 'org.bluez.GattCharacteristic1'
-LE_ADV_IFACE = 'org.bluez.LEAdvertisement1'
+LE_ADV_IFACE    = 'org.bluez.LEAdvertisement1'
 
 class CredsService(ServiceInterface):
     PATH = '/org/bluez/example/service0'
@@ -71,7 +72,7 @@ class CredsAdvertisement(ServiceInterface):
         print("Advertisement released")
 
 async def main():
-    bus = await MessageBus(bus_type=MessageBus.TYPE_SYSTEM).connect()
+    bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
 
     # Register GATT service
     gatt_obj = await bus.get_proxy_object(BLUEZ, ADAPTER_PATH, [GATT_MGR_IFACE])

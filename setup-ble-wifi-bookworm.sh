@@ -12,4 +12,4 @@ echo "==> Deploying scripts…"
 cp ble-creds-server.py ble-wifi-provision.sh /usr/local/bin/
 chmod +x /usr/local/bin/ble-creds-server.py /usr/local/bin/ble-wifi-provision.sh
 
-echo "Setup complete! Run 'sudo ble-wifi-provision.sh' to start provisioning."
+echo "Setup complete! Run 'sudo /usr/local/bin/ble-wifi-provision.sh' to start provisioning."
