@@ -5,7 +5,9 @@ Wants=bluetooth.service
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/ble-golang-provision.sh
+ExecStart=/usr/local/bin/ble-wifi-provision.sh
+StandardOutput=journal
+StandardError=journal
 Restart=no
 
 [Install]

@@ -8,14 +8,14 @@ This repository provides a Go-based BLE peripheral to provision Wi-Fi on Raspber
 - **go.mod**: Go module file.
 - **ble-wifi-provision.sh**: Wrapper script to run the binary.
 - **ble-wifi-provision.service**: systemd unit to start provisioning on boot.
-- **setup-go.sh**: Installer script to install Go, build the binary, and deploy files.
+- **setup-go.sh**: Installer script to install Go via apt, build the binary, and deploy files.
 
 ## Quickstart
 
 1. Unzip and enter directory:
    ```bash
-   unzip ble-golang-provision.zip
-   cd ble-golang-provision
+   unzip ble-golang-provision-update.zip
+   cd ble-golang-provision-update
    ```
 2. Run installer:
    ```bash
@@ -26,5 +26,5 @@ This repository provides a Go-based BLE peripheral to provision Wi-Fi on Raspber
    ```bash
    sudo systemctl start ble-wifi-provision.service
    ```
-4. In your BLE app, scan for **Pi-Setup**, write SSID to characteristic `12345678-1234-5678-1234-56789abcdef1`, password to `...ef2`.
+4. In your BLE app, scan for **Pi-Setup**, write SSID to characteristic `12345678-1234-5678-1234-56789abcdef1`, and password to `...ef2`.
 5. On success, the Pi connects and stops advertising.

@@ -4,15 +4,9 @@ import (
     "fmt"
     "os"
     "os/exec"
-    "time"
 
     "github.com/go-ble/ble"
     "github.com/go-ble/ble/linux"
-)
-
-var (
-    ssidChan = make(chan string)
-    pskChan  = make(chan string)
 )
 
 func main() {
@@ -24,20 +18,21 @@ func main() {
     }
     ble.SetDefaultDevice(d)
 
-    // Define service and characteristics
     serviceUUID := ble.MustParse("12345678-1234-5678-1234-56789abcdef0")
     ssidChar := ble.NewCharacteristic(ble.MustParse("12345678-1234-5678-1234-56789abcdef1"))
     pskChar := ble.NewCharacteristic(ble.MustParse("12345678-1234-5678-1234-56789abcdef2"))
 
+    creds := make(map[string]string)
+
     ssidChar.HandleWrite(ble.WriteHandlerFunc(func(req ble.Request, rsp ble.ResponseWriter) {
         ssid := string(req.Data())
         fmt.Printf("Received SSID: %s\n", ssid)
-        ssidChan <- ssid
+        creds["ssid"] = ssid
     }))
     pskChar.HandleWrite(ble.WriteHandlerFunc(func(req ble.Request, rsp ble.ResponseWriter) {
         psk := string(req.Data())
         fmt.Printf("Received PSK: %s\n", psk)
-        pskChan <- psk
+        creds["psk"] = psk
     }))
 
     service := ble.NewService(serviceUUID)
@@ -46,23 +41,22 @@ func main() {
     ble.AddService(service)
 
     // Advertise
-    go func() {
-        advOpts := []ble.AdvertisementOption{
-            ble.WithLocalName("Pi-Setup"),
-            ble.WithServices(serviceUUID),
-        }
-        fmt.Println("Advertising as Pi-Setup...")
-        ble.AdvertiseNameAndServices(advOpts...)
-    }()
+    fmt.Println("Advertising as Pi-Setup...")
+    go ble.AdvertiseNameAndServices("Pi-Setup", serviceUUID)
 
-    // Wait for credentials
-    ssid := <-ssidChan
-    psk := <-pskChan
-    fmt.Printf("Credentials received - SSID: %s, PSK: %s\n", ssid, psk)
+    // Wait for creds
+    for {
+        if creds["ssid"] != "" && creds["psk"] != "" {
+            fmt.Printf("Credentials received - SSID: %s, PSK: %s\n", creds["ssid"], creds["psk"])
+            break
+        }
+        // sleep
+        exec.Command("sleep", "1").Run()
+    }
 
     // Connect to Wi-Fi
     fmt.Println("Connecting to Wi-Fi...")
-    cmd := exec.Command("nmcli", "device", "wifi", "connect", ssid, "password", psk)
+    cmd := exec.Command("nmcli", "device", "wifi", "connect", creds["ssid"], "password", creds["psk"])
     out, err := cmd.CombinedOutput()
     if err != nil {
         fmt.Fprintf(os.Stderr, "nmcli error: %v, output: %s\n", err, string(out))
@@ -70,7 +64,4 @@ func main() {
     }
     fmt.Println("Connected successfully, stopping advertisement.")
     d.Stop()
-
-    // Wait a bit before exit
-    time.Sleep(2 * time.Second)
 }
