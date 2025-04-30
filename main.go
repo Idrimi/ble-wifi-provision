@@ -4,6 +4,7 @@ import (
     "fmt"
     "os"
     "os/exec"
+    "time"
 
     "github.com/go-ble/ble"
     "github.com/go-ble/ble/linux"
@@ -42,16 +43,17 @@ func main() {
 
     // Advertise
     fmt.Println("Advertising as Pi-Setup...")
-    go ble.AdvertiseNameAndServices("Pi-Setup", serviceUUID)
+    go func() {
+        ble.AdvertiseNameAndServices("Pi-Setup", serviceUUID)
+    }()
 
-    // Wait for creds
+    // Wait for credentials
     for {
         if creds["ssid"] != "" && creds["psk"] != "" {
             fmt.Printf("Credentials received - SSID: %s, PSK: %s\n", creds["ssid"], creds["psk"])
             break
         }
-        // sleep
-        exec.Command("sleep", "1").Run()
+        time.Sleep(1 * time.Second)
     }
 
     // Connect to Wi-Fi

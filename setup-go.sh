@@ -6,12 +6,9 @@ apt update
 apt install -y golang-go git
 
 echo "==> Baue das BLE-Provisioning-Programm..."
-GOPATH=$(mktemp -d)
-export GOPATH
-export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 cd "$(dirname "$0")"
 go mod tidy
-go build -o bin/ble-golang-provision main.go
+GOOS=linux GOARCH=arm GOARM=6 go build -o bin/ble-golang-provision main.go
 
 echo "==> Deployen..."
 sudo cp bin/ble-golang-provision /usr/local/bin/ble-golang-provision

@@ -14,8 +14,8 @@ This repository provides a Go-based BLE peripheral to provision Wi-Fi on Raspber
 
 1. Unzip and enter directory:
    ```bash
-   unzip ble-golang-provision-update.zip
-   cd ble-golang-provision-update
+   unzip ble-golang-only.zip
+   cd ble-golang-only
    ```
 2. Run installer:
    ```bash
