@@ -2,6 +2,8 @@
 
 This repository provides a C++-based BLE peripheral to provision Wi-Fi on Raspberry Pi Zero 2 W using sdbus-c++.
 
+This version fixes D-Bus timeouts by starting the event loop before making method calls.
+
 ## Files
 
 - **ble_provision.cpp**  

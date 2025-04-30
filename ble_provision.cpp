@@ -21,10 +21,11 @@ static std::string ssid, psk;
 
 int main()
 {
-    // Connect to system bus
+    // 1) Connect to system bus and start event loop
     auto connection = sdbus::createSystemBusConnection();
+    connection->enterEventLoopAsync();
 
-    // Create GATT Service object
+    // 2) Create GATT Service object
     auto svcObj = sdbus::createObject(*connection, SERVICE_PATH);
     svcObj->registerProperty("UUID")
           .onInterface("org.bluez.GattService1")
@@ -42,7 +43,7 @@ int main()
           });
     svcObj->finishRegistration();
 
-    // Create SSID Characteristic
+    // 3) Create SSID Characteristic
     auto char1Obj = sdbus::createObject(*connection, CHAR1_PATH);
     char1Obj->registerProperty("UUID")
             .onInterface("org.bluez.GattCharacteristic1")
@@ -62,7 +63,7 @@ int main()
     });
     char1Obj->finishRegistration();
 
-    // Create PSK Characteristic
+    // 4) Create PSK Characteristic
     auto char2Obj = sdbus::createObject(*connection, CHAR2_PATH);
     char2Obj->registerProperty("UUID")
             .onInterface("org.bluez.GattCharacteristic1")
@@ -82,16 +83,16 @@ int main()
     });
     char2Obj->finishRegistration();
 
-    // Register GATT application
+    // 5) Register GATT application
     auto gattMgr = sdbus::createProxy(*connection, "org.bluez", "/org/bluez/hci0");
     gattMgr->callMethod("RegisterApplication")
            .onInterface("org.bluez.GattManager1")
            .withArguments(sdbus::ObjectPath("/"), std::map<std::string, sdbus::Variant>{});
 
-    // Use pointer to proxy for advertisement manager
+    // 6) Use proxy pointer for advertisement manager
     auto* advMgr = gattMgr.get();
 
-    // Create LE Advertisement object
+    // 7) Create LE Advertisement object
     auto advObj = sdbus::createObject(*connection, ADV_PATH);
     advObj->registerProperty("Type")
           .onInterface("org.bluez.LEAdvertisement1")
@@ -110,26 +111,23 @@ int main()
           .implementedAs([&]{ std::cout<<"Advertisement released\n"; });
     advObj->finishRegistration();
 
-    // Register Advertisement
+    // 8) Register Advertisement
     advMgr->callMethod("RegisterAdvertisement")
            .onInterface("org.bluez.LEAdvertisingManager1")
            .withArguments(sdbus::ObjectPath(ADV_PATH), std::map<std::string, sdbus::Variant>{});
 
     std::cout << "🟢 Advertising as Pi-Setup, waiting for credentials..." << std::endl;
 
-    // Start event loop
-    connection->enterEventLoopAsync();
-
-    // Wait for both SSID and PSK
+    // 9) Wait for both SSID and PSK
     while(ssid.empty() || psk.empty())
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    // Connect to Wi-Fi
+    // 10) Connect to Wi-Fi
     std::string cmd = "nmcli device wifi connect "" + ssid + "" password "" + psk + """;
     std::cout << "🔌 Running: " << cmd << std::endl;
     std::system(cmd.c_str());
 
-    // Unregister advertisement
+    // 11) Unregister advertisement
     advMgr->callMethod("UnregisterAdvertisement")
            .onInterface("org.bluez.LEAdvertisingManager1")
            .withArguments(sdbus::ObjectPath(ADV_PATH));
