@@ -1,6 +1,11 @@
-# BLE Wi-Fi Provisioning via C++ for Raspberry Pi Zero 2 W (Modern sdbus-c++)
+# BLE Wi-Fi Provisioning via C++ for Raspberry Pi Zero 2 W (Modern sdbus-c++ v2 Fixed)
 
 This repository provides a modern C++ implementation using sdbus-c++ v2 to set up a BLE peripheral for headless Wi-Fi provisioning on a Raspberry Pi Zero 2 W.
+
+This version fixes compile errors by:
+- Using correct createProxy() signatures (3 args).
+- Replacing `sdbus::VariantMap` with `std::map<std::string, sdbus::Variant>`.
+- Adjusting implementedAs lambdas accordingly.
 
 ## Files
 

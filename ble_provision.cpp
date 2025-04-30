@@ -4,6 +4,7 @@
 #include <chrono>
 #include <vector>
 #include <string>
+#include <map>
 #include <cstdlib>
 
 static constexpr auto BLUEZ_SERVICE        = "org.bluez";
@@ -59,7 +60,9 @@ int main()
          .withGetter([] { return std::vector<std::string>{"write"}; });
     char1->registerMethod("WriteValue")
          .onInterface(GATT_CHAR_IFACE)
-         .implementedAs([&](const std::vector<uint8_t>& value, const sdbus::VariantMap&) {
+         .implementedAs([&](const std::vector<uint8_t>& value,
+                            const std::map<std::string, sdbus::Variant>&)
+    {
         ssid = std::string(value.begin(), value.end());
         std::cout << "[GATT] SSID: " << ssid << "\n";
     });
@@ -78,24 +81,27 @@ int main()
          .withGetter([] { return std::vector<std::string>{"write"}; });
     char2->registerMethod("WriteValue")
          .onInterface(GATT_CHAR_IFACE)
-         .implementedAs([&](const std::vector<uint8_t>& value, const sdbus::VariantMap&) {
+         .implementedAs([&](const std::vector<uint8_t>& value,
+                            const std::map<std::string, sdbus::Variant>&)
+    {
         psk = std::string(value.begin(), value.end());
         std::cout << "[GATT] PSK: " << psk << "\n";
     });
     char2->finishRegistration();
 
     // Register GATT application (fire-and-forget)
-    auto gattMgr = sdbus::createProxy(*connection, BLUEZ_SERVICE, ADAPTER_PATH, GATT_MANAGER_IFACE);
+    auto gattMgr = sdbus::createProxy(*connection, BLUEZ_SERVICE, ADAPTER_PATH);
     gattMgr->callMethod("RegisterApplication")
            .onInterface(GATT_MANAGER_IFACE)
-           .withArguments(sdbus::ObjectPath{"/"}, sdbus::VariantMap{})
+           .withArguments(sdbus::ObjectPath{"/"},
+                          std::map<std::string, sdbus::Variant>{})
            .dontExpectReply();
 
     // Short delay
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
     // Advertising manager proxy
-    auto advMgr = sdbus::createProxy(*connection, BLUEZ_SERVICE, ADAPTER_PATH, ADVERT_MGR_IFACE);
+    auto advMgr = sdbus::createProxy(*connection, BLUEZ_SERVICE, ADAPTER_PATH);
 
     // Create advertisement
     auto adv = sdbus::createObject(*connection, ADV_PATH);
@@ -119,7 +125,8 @@ int main()
     // Register advertisement
     advMgr->callMethod("RegisterAdvertisement")
           .onInterface(ADVERT_MGR_IFACE)
-          .withArguments(sdbus::ObjectPath{ADV_PATH}, sdbus::VariantMap{})
+          .withArguments(sdbus::ObjectPath{ADV_PATH},
+                         std::map<std::string, sdbus::Variant>{})
           .dontExpectReply();
 
     std::cout << "🟢 Advertising as Pi-Setup, waiting for credentials…\n";
