@@ -1,13 +1,37 @@
-# BLE Wi-Fi Provisioning via C++ for Raspberry Pi Zero 2 W
+# BLE Wi-Fi Provisioning via C++ for Raspberry Pi Zero 2 W (Modern sdbus-c++)
 
-This repository provides a C++-based BLE peripheral to provision Wi-Fi on Raspberry Pi Zero 2 W using sdbus-c++.
-
-This version adds a short delay after GATT application registration to avoid D-Bus 'No object received' errors.
+This repository provides a modern C++ implementation using sdbus-c++ v2 to set up a BLE peripheral for headless Wi-Fi provisioning on a Raspberry Pi Zero 2 W.
 
 ## Files
 
-- **ble_provision.cpp**: Main C++ source with added sleep before advertisement registration.
-- **compile.sh**: Script to compile, install binary and systemd service.
-- **ble-wifi-provision.service**: systemd unit for provisioning.
+- **ble_provision.cpp**  
+  Main C++ source with GATT server & LE advertisement via modern sdbus-c++ v2 API.
 
-Follow the same Quickstart as before.
+- **compile.sh**  
+  Script to compile, install the binary, and register the systemd service.
+
+- **ble-wifi-provision.service**  
+  systemd unit to launch the provisioning binary on boot or on demand.
+
+## Quickstart
+
+1. Install dependencies:
+   ```bash
+   sudo apt update
+   sudo apt install -y g++ pkg-config libdbus-1-dev libsystemd-dev libglib2.0-dev libsdbus-c++-dev
+   ```
+
+2. Compile & install:
+   ```bash
+   chmod +x compile.sh
+   ./compile.sh
+   ```
+
+3. Enable & start the service:
+   ```bash
+   sudo systemctl enable ble-wifi-provision
+   sudo systemctl start ble-wifi-provision
+   ```
+
+4. With a BLE client (e.g., nRF Connect), scan for **Pi-Setup**, write your SSID to characteristic `...ef1`, and password to `...ef2`.  
+5. The Pi will connect via `nmcli` and stop advertising upon success.
