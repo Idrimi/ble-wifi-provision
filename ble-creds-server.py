@@ -94,13 +94,13 @@ async def main():
     bus.export(ch2.path, ch2)
 
     gatt = proxy.get_interface(GATT_MGR_IFACE)
-    await gatt.RegisterApplication(svc.PATH, {})
+    await gatt.call_register_application(svc.PATH, {})
 
     # Register LE advertisement
     adv = CredsAdvertisement(bus)
     bus.export(adv.PATH, adv)
     adv_mgr = proxy.get_interface(LE_ADV_MGR_IFACE)
-    await adv_mgr.RegisterAdvertisement(adv.PATH, {})
+    await adv_mgr.call_register_advertisement(adv.PATH, {})
 
     print("🟢 Advertising as 'Pi-Setup', waiting for SSID & PSK…")
     while not (ch1.value and ch2.value):
@@ -110,7 +110,7 @@ async def main():
     psk  = ch2.value.decode()
     print(f"--> Got SSID: {ssid!r}, PSK: {psk!r}")
 
-    await adv_mgr.UnregisterAdvertisement(adv.PATH)
+    await adv_mgr.call_unregister_advertisement(adv.PATH)
     sys.exit(0)
 
 if __name__ == '__main__':
