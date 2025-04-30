@@ -88,6 +88,9 @@ int main()
            .onInterface("org.bluez.GattManager1")
            .withArguments(sdbus::ObjectPath("/"), std::map<std::string, sdbus::Variant>{});
 
+    // Alias advertisement manager to gattMgr
+    auto advMgr = gattMgr;
+
     // Create LE Advertisement object
     auto advObj = sdbus::createObject(*connection, ADV_PATH);
     advObj->registerProperty("Type")
