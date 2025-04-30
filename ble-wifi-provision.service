@@ -1,0 +1,11 @@
+[Unit]
+Description=BLE Wi-Fi Provisioning
+After=bluetooth.service
+Wants=bluetooth.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/ble-wifi-provision.sh
+
+[Install]
+WantedBy=multi-user.target
