@@ -1,29 +1,29 @@
 # BLE → Wi-Fi Provisioning for Raspberry Pi Zero 2 W
 
-This repository provides a headless BLE-based Wi-Fi provisioning flow for the Raspberry Pi Zero 2 W.
+This repository provides a headless BLE Wi-Fi provisioning flow for the Raspberry Pi Zero 2 W.
 
 ## Contents
 
 - **ble-creds-server.py**  
-  A Python GATT server (dbus-next + asyncio) that advertises over BLE and exposes two write-only characteristics for SSID & password.
+  Python GATT server (dbus-next + asyncio) advertising over BLE with correct introspection.
 
 - **ble-wifi-provision.sh**  
-  A shell wrapper that runs the GATT server, captures credentials, and uses `nmcli` to connect to Wi-Fi.
+  Shell wrapper to run the GATT server and connect Wi-Fi via nmcli.
 
 - **setup-ble-wifi-bookworm.sh**  
-  Installer script for Debian Bookworm Lite that installs dependencies and deploys the two main scripts.
+  Installer script for Debian Bookworm Lite.
 
 - **ble-wifi-provision.service**  
-  Optional systemd unit for automatic provisioning at boot.
+  Optional systemd unit.
 
 - **Dockerfile**  
-  Containerized version (requires privileged + host networking).
+  Containerized version.
 
 ## Quickstart
 
-1. Run the installer on your Pi:
+1. Run the installer:
    ```bash
    sudo ./setup-ble-wifi-bookworm.sh
    ```
-2. On your phone/laptop (e.g., nRF Connect), scan for **Pi-Setup**, write SSID to characteristic ending in `...ef1`, write password to `...ef2`.
-3. The Pi will automatically join the network headlessly.
+2. In your BLE app, connect to **Pi-Setup**, write SSID to `…ef1`, password to `…ef2`.
+3. Pi joins the network automatically.

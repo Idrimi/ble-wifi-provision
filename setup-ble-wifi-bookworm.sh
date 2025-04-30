@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-#
-# setup-ble-wifi-bookworm.sh — installer for Debian Bookworm Lite
-#
 set -euo pipefail
 
 echo "==> Installing dependencies…"
